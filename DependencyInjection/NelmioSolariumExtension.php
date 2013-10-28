@@ -40,6 +40,8 @@ class NelmioSolariumExtension extends Extension
             $isDebug = false;
         }
 
+        $loader->load('fixtures.xml');
+
         $defaultClient = $config['default_client'];
         if (!count($config['clients'])) {
             $config['clients'][$defaultClient] = array();
@@ -126,6 +128,16 @@ class NelmioSolariumExtension extends Extension
                 $logger = new Reference('solarium.data_collector');
                 $container->getDefinition($clientName)->addMethodCall('registerPlugin', array($clientName . '.logger', $logger));
             }
+
+            // Add the Solarium Fixtures Executor
+            $executorDefinition = new Definition('Solarium\Support\DataFixtures\Executor', array($clientDefinition));
+            $executorName = sprintf('solarium.fixtures.executor.%s', $name);
+            $container->setDefinition($executorName, $executorDefinition);
+
+            // Add the Solarium Fixtures Purger
+            $purgerDefinition = new Definition('Solarium\Support\DataFixtures\Purger', array($clientDefinition));
+            $purgerName = sprintf('solarium.fixtures.purger.%s', $name);
+            $container->setDefinition($purgerName, $purgerDefinition);
         }
 
         // configure registry
